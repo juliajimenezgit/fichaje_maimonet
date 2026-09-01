@@ -5,6 +5,7 @@ import { deletePdf, getPdf, savePdf } from './services/documentStorage.js';
 import { extractTasksFromPdf } from './services/pdfTaskExtractor.js';
 import logoDark from './assets/logo_grande_dark.png';
 import logoWhite from './assets/logo_grande_white.png';
+import seedData from './data/seedData.json';
 import './App.css';
 
 const STORAGE_KEY = 'maimonet-simple-hours-v2';
@@ -23,9 +24,14 @@ const formatLive = (milliseconds) => { const seconds = Math.max(0, Math.floor(mi
 function loadData() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(localStorage.getItem('maimonet-simple-hours-v1'));
-    const projects = stored?.projects?.length ? stored.projects : INITIAL_PROJECTS;
-    return { entries: stored?.entries || [], activeTimer: stored?.activeTimer || null, projects };
-  } catch { return { entries: [], activeTimer: null, projects: INITIAL_PROJECTS }; }
+    if (stored?.projects?.length) {
+      return { entries: stored.entries || [], activeTimer: stored.activeTimer || null, projects: stored.projects };
+    }
+    // Si no hay datos en localStorage, cargar seedData
+    return seedData;
+  } catch { 
+    return seedData;
+  }
 }
 
 function HoursApp() {

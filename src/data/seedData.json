@@ -1,0 +1,302 @@
+{
+  "entries": [
+    {
+      "date": "2026-08-12",
+      "startTime": "13:30",
+      "endTime": "14:00",
+      "task": "Investigación personal prácticas",
+      "subtasks": [],
+      "projectId": "maimonet",
+      "id": "53f034e6-7158-4e1e-bd57-5230e40c9a95",
+      "durationMs": 1800000,
+      "source": "manual",
+      "workTaskId": "a194e023-27d9-4660-ae6f-bc4c34b37c80",
+      "taskStatus": "postponed"
+    },
+    {
+      "date": "2026-08-12",
+      "startTime": "13:15",
+      "endTime": "13:30",
+      "task": "Mirar cómo publicar una app en iphone",
+      "subtasks": [],
+      "projectId": "maimonet",
+      "id": "e1e9f3b4-ba4e-4503-b877-52e74ee12c4a",
+      "durationMs": 900000,
+      "source": "manual",
+      "workTaskId": "f0bdbfb9-cc22-46ba-ad63-7307741d481e",
+      "taskStatus": "doing"
+    },
+    {
+      "date": "2026-07-15",
+      "startTime": "11:15",
+      "endTime": "11:45",
+      "task": "Exportación al CSV utilizado por QTH SUTAN.",
+      "subtasks": [],
+      "projectId": "qth-sutan",
+      "id": "fbaca9f3-5914-4870-9590-1446e8e2765c",
+      "durationMs": 1800000,
+      "source": "manual",
+      "workTaskId": "611ba7b6-38e4-408f-886c-9f47a9177b0b",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-07-16",
+      "startTime": "10:30",
+      "endTime": "11:15",
+      "task": "Revisión y edición de preguntas:",
+      "subtasks": [
+        "Enunciado, respuestas, solución y explicación.",
+        "Alta y eliminación manual de preguntas."
+      ],
+      "projectId": "qth-sutan",
+      "id": "fbe9b740-483c-475f-b9d9-2ed542401f61",
+      "durationMs": 2700000,
+      "source": "manual",
+      "workTaskId": "86b78142-f1aa-4e62-8d61-4a2bea648f64",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-07-16",
+      "startTime": "10:00",
+      "endTime": "10:30",
+      "task": "Generador funcional con selección de:",
+      "subtasks": [
+        "Número de preguntas",
+        "Nivel de dificultad"
+      ],
+      "projectId": "qth-sutan",
+      "id": "0bf14fa3-3437-4565-a406-65c9838a9dde",
+      "durationMs": 1800000,
+      "source": "manual",
+      "workTaskId": "a32e5363-f432-4095-a8ca-df25a304c037",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-07-15",
+      "startTime": "16:00",
+      "endTime": "16:30",
+      "task": "Subida de archivos PDF",
+      "subtasks": [],
+      "projectId": "qth-sutan",
+      "id": "f886f1fa-fdcd-47ea-b873-7e34442c6048",
+      "durationMs": 1800000,
+      "source": "manual",
+      "workTaskId": "5a6de4bc-8c30-449e-bac9-6c4490491df5",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-07-15",
+      "startTime": "10:00",
+      "endTime": "12:00",
+      "task": "Gestión Básica de usuarios: crear, modificar y eliminar",
+      "projectId": "qth-sutan",
+      "id": "f7ca9302-a4f4-4105-b3a2-8fda62b17814",
+      "durationMs": 7200000,
+      "source": "manual",
+      "workTaskId": "2e0d8390-dd15-49b7-87bd-6978b0aeb67a",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-07-14",
+      "startTime": "16:00",
+      "endTime": "17:00",
+      "task": "Login",
+      "projectId": "qth-sutan",
+      "id": "d18c7290-8a00-43f1-a176-4c0adf9775e4",
+      "durationMs": 3600000,
+      "source": "manual",
+      "workTaskId": "8f551198-23ac-4421-a6a7-f0727fd8176a",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-08-12",
+      "startTime": "12:00",
+      "endTime": "13:00",
+      "task": "Mejorar sistema fichaje maimonet",
+      "projectId": "maimonet",
+      "id": "a4f45dbf-99f3-4681-94c3-7b44c9cfe201",
+      "durationMs": 3600000,
+      "source": "manual",
+      "workTaskId": "42a70af0-6b5f-45bc-a0c0-d842c6c5517a",
+      "taskStatus": "done"
+    },
+    {
+      "date": "2026-08-12",
+      "startTime": "11:00",
+      "endTime": "12:00",
+      "task": "Quitar domino concurso charangas de www.maimonet.es",
+      "projectId": "maimonet",
+      "id": "18c743f1-e266-4c4a-8056-2f04ecb40968",
+      "durationMs": 3600000,
+      "source": "manual",
+      "workTaskId": "32122f14-1f98-4c5b-8303-8be2abe79894",
+      "taskStatus": "done"
+    },
+    {
+      "id": "dcd99a17-2ee1-400e-af3c-f6a3c69050f2",
+      "clientId": "qth-sutan",
+      "task": "Comprobar el estado del proyecto y ponerme con los TODO",
+      "date": "2026-08-12",
+      "startTime": "12:38",
+      "endTime": "12:38",
+      "durationMs": 10933,
+      "source": "timer",
+      "workTaskId": "376f58c8-595d-472f-aacf-921b4962638d",
+      "taskStatus": "done"
+    }
+  ],
+  "activeTimer": null,
+  "projects": [
+    {
+      "id": "qth-sutan",
+      "name": "QTH Sutan",
+      "actas": [
+        {
+          "id": "8d8f962e-3af5-4a17-9806-4bf81bce762b",
+          "name": "acta_qthsutan.pdf"
+        }
+      ],
+      "budgets": [
+        {
+          "id": "804855ee-5897-489e-9a40-e202f6d0e9e6",
+          "name": "presupuesto_qthsutan.pdf"
+        }
+      ],
+      "workTasks": [
+        {
+          "id": "bae70530-fa10-45eb-a8ef-00af2d2bbba0",
+          "title": "Gestionar permisos de lectura por usuario para los tests creados por otros profesores.",
+          "done": false,
+          "source": "Añadida manualmente",
+          "subtasks": []
+        },
+        {
+          "id": "f02abc17-1085-486e-a13c-a45a670a981b",
+          "title": "Organizar los PDF por Manual, Tema, Capítulo",
+          "done": false,
+          "source": "Añadida manualmente",
+          "subtasks": []
+        },
+        {
+          "id": "611ba7b6-38e4-408f-886c-9f47a9177b0b",
+          "title": "Exportación al CSV utilizado por QTH SUTAN.",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "86b78142-f1aa-4e62-8d61-4a2bea648f64",
+          "title": "Revisión y edición de preguntas:",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": [
+            "Enunciado, respuestas, solución y explicación.",
+            "Alta y eliminación manual de preguntas."
+          ]
+        },
+        {
+          "id": "a32e5363-f432-4095-a8ca-df25a304c037",
+          "title": "Generador funcional con selección de:",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": [
+            "Número de preguntas",
+            "Nivel de dificultad"
+          ]
+        },
+        {
+          "id": "2e0d8390-dd15-49b7-87bd-6978b0aeb67a",
+          "title": "Gestión Básica de usuarios: crear, modificar y eliminar",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "5a6de4bc-8c30-449e-bac9-6c4490491df5",
+          "title": "Subida de archivos PDF",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "8f551198-23ac-4421-a6a7-f0727fd8176a",
+          "title": "Login",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "376f58c8-595d-472f-aacf-921b4962638d",
+          "title": "Comprobar el estado del proyecto y ponerme con los TODO",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "adb8b073-137c-46bb-843e-697fb8997bc8",
+          "title": "Permitir configurar la generación por manual, tema y capítulo",
+          "done": false,
+          "source": "Añadida manualmente",
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "id": "maimonet",
+      "name": "Maimonet",
+      "actas": [],
+      "budgets": [],
+      "workTasks": [
+        {
+          "id": "42a70af0-6b5f-45bc-a0c0-d842c6c5517a",
+          "title": "Mejorar sistema fichaje maimonet",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "32122f14-1f98-4c5b-8303-8be2abe79894",
+          "title": "Quitar domino concurso charangas de www.maimonet.es",
+          "done": true,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "f7e0b44b-8a8e-4ee8-bed1-9315be8d9731",
+          "title": "Que aparezca Maimonet en Google Maps",
+          "done": false,
+          "source": "Añadida manualmente",
+          "subtasks": [],
+          "status": "doing"
+        },
+        {
+          "id": "f0bdbfb9-cc22-46ba-ad63-7307741d481e",
+          "title": "Mirar cómo publicar una app en iphone",
+          "status": "doing",
+          "done": false,
+          "createdAt": 1786534959909,
+          "source": "Historial de horas",
+          "subtasks": []
+        },
+        {
+          "id": "a194e023-27d9-4660-ae6f-bc4c34b37c80",
+          "title": "Investigación personal prácticas",
+          "status": "postponed",
+          "done": false,
+          "createdAt": 1786535039089,
+          "source": "Añadida manualmente",
+          "subtasks": []
+        },
+        {
+          "id": "401d545a-6726-47ae-abad-a980754688d6",
+          "title": "Campaña Marketing Nerea",
+          "status": "todo",
+          "done": false,
+          "createdAt": 1786535047089,
+          "source": "Añadida manualmente",
+          "subtasks": []
+        }
+      ]
+    }
+  ]
+}
