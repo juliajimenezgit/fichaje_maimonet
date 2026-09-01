@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Tipografía */
+  font-family: 'Quicksand', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Paleta de colores (claro) */
+  --color-black: #1B1B1B;
+  --color-brand: #6D5EF8;
+  --color-accent: #4D8DFF;
+  --color-dark-gray: #2A2D36;
+  --color-muted: #D9DEE7;
+  --color-bg: #F5F7FA;
+
+  /* Aplicación */
+  --text-main: var(--color-black);
+  --text-muted: #6b6f76;
+  --app-bg: var(--color-bg);
+  --surface-bg: #ffffff;
+  --border: var(--color-muted);
+}
+
+:root[data-theme='dark'] {
+  /* Tema oscuro */
+  --color-black: #1B1B1B;
+  --color-brand: #6D5EF8;
+  --color-accent: #4D8DFF;
+  --color-dark-gray: #2A2D36;
+  --color-muted: #D9DEE7;
+  --color-bg: #1B1B1B;
+
+  --text-main: #F5F7FA;
+  --text-muted: #D9DEE7;
+  --app-bg: var(--color-bg);
+  --surface-bg: #2A2D36;
+  --border: #33363b;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--app-bg); color: var(--text-main); font-family: inherit; }
+#root { min-height: 100vh; }
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; }
+a { color: inherit; }
