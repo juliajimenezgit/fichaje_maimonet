@@ -8,6 +8,10 @@
 .login-icon { width: 52px; height: 52px; display: grid; place-items: center; margin-bottom: 8px; border-radius: 15px; background: var(--accent-soft); color: var(--accent); }
 .login-panel h1 { margin-bottom: -5px; font-size: 30px; line-height: 1.1; }
 .login-copy { margin-bottom: 6px; color: var(--text-muted); }
+.password-field { position: relative; }
+.password-field input { padding-right: 50px; }
+.password-toggle { position: absolute; top: 50%; right: 8px; width: 36px; height: 36px; display: grid; place-items: center; transform: translateY(-50%); border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); cursor: pointer; }
+.password-toggle:hover { background: var(--accent-soft); color: var(--accent); }
 .login-button { width: 100%; min-height: 52px; margin-top: 4px; border: 0; border-radius: 999px; background: linear-gradient(135deg, var(--color-brand), var(--color-accent)); color: white; font-weight: 700; cursor: pointer; }
 .simple-main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 52px 0 70px; }
 .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }

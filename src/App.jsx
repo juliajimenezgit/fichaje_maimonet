@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Check, ChevronRight, Clock3, FileText, FolderOpen, ListChecks, LockKeyhole, LogOut, Moon, Pencil, Plus, Sun, Trash2, Upload, X } from 'lucide-react';
+import { BriefcaseBusiness, Check, ChevronRight, Clock3, Eye, EyeOff, FileText, FolderOpen, ListChecks, LockKeyhole, LogOut, Moon, Pencil, Plus, Sun, Trash2, Upload, X } from 'lucide-react';
 import { ThemeProvider, useTheme } from './context/ThemeContext.jsx';
 import { deletePdf, getPdf, savePdf } from './services/documentStorage.js';
 import { extractTasksFromPdf } from './services/pdfTaskExtractor.js';
@@ -39,6 +39,7 @@ function LoginGate({ children }) {
   const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
 
   const submit = (event) => {
@@ -68,7 +69,7 @@ function LoginGate({ children }) {
 
   if (authenticated) return children({ logout });
 
-  return <main className="login-screen"><form className="login-panel" onSubmit={submit}><div className="login-icon"><LockKeyhole size={24} /></div><p className="eyebrow">Área privada</p><h1>Accede a tu fichaje</h1><p className="login-copy">Introduce tus datos para continuar.</p><label><span>Usuario</span><input autoFocus value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label><label><span>Contraseña</span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></label>{message && <p className="form-message">{message}</p>}<button className="login-button" type="submit">Entrar</button></form></main>;
+  return <main className="login-screen"><form className="login-panel" onSubmit={submit}><div className="login-icon"><LockKeyhole size={24} /></div><p className="eyebrow">Área privada</p><h1>Accede a tu fichaje</h1><p className="login-copy">Introduce tus datos para continuar.</p><label><span>Usuario</span><input autoFocus value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label><label><span>Contraseña</span><div className="password-field"><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /><button type="button" className="password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>{message && <p className="form-message">{message}</p>}<button className="login-button" type="submit">Entrar</button></form></main>;
 }
 
 function HoursApp({ onLogout }) {
