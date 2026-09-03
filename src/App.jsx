@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Check, ChevronRight, Clock3, FileText, FolderOpen, ListChecks, Moon, Pencil, Plus, Sun, Trash2, Upload, X } from 'lucide-react';
+import { BriefcaseBusiness, Check, ChevronRight, Clock3, FileText, FolderOpen, ListChecks, LockKeyhole, LogOut, Moon, Pencil, Plus, Sun, Trash2, Upload, X } from 'lucide-react';
 import { ThemeProvider, useTheme } from './context/ThemeContext.jsx';
 import { deletePdf, getPdf, savePdf } from './services/documentStorage.js';
 import { extractTasksFromPdf } from './services/pdfTaskExtractor.js';
@@ -9,6 +9,7 @@ import seedData from './data/seedData.json';
 import './App.css';
 
 const STORAGE_KEY = 'maimonet-simple-hours-v2';
+const AUTH_SESSION_KEY = 'maimonet-authenticated';
 const INITIAL_PROJECTS = [
   { id: 'qth-sutan', name: 'QTH Sutan', actas: [], budgets: [], workTasks: [] },
   { id: 'maimonet', name: 'Maimonet', actas: [], budgets: [], workTasks: [] },
@@ -34,7 +35,43 @@ function loadData() {
   }
 }
 
-function HoursApp() {
+function LoginGate({ children }) {
+  const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+
+  const submit = (event) => {
+    event.preventDefault();
+    const configuredUser = import.meta.env.VITE_LOGIN_USER;
+    const configuredPassword = import.meta.env.VITE_LOGIN_PASSWORD;
+    if (!configuredUser || !configuredPassword) {
+      setMessage('Falta configurar el usuario y la contraseña en .env.local.');
+      return;
+    }
+    if (username !== configuredUser || password !== configuredPassword) {
+      setMessage('El usuario o la contraseña no son correctos.');
+      setPassword('');
+      return;
+    }
+    sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+    setAuthenticated(true);
+    setMessage('');
+  };
+
+  const logout = () => {
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    setAuthenticated(false);
+    setUsername('');
+    setPassword('');
+  };
+
+  if (authenticated) return children({ logout });
+
+  return <main className="login-screen"><form className="login-panel" onSubmit={submit}><div className="login-icon"><LockKeyhole size={24} /></div><p className="eyebrow">Área privada</p><h1>Accede a tu fichaje</h1><p className="login-copy">Introduce tus datos para continuar.</p><label><span>Usuario</span><input autoFocus value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label><label><span>Contraseña</span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></label>{message && <p className="form-message">{message}</p>}<button className="login-button" type="submit">Entrar</button></form></main>;
+}
+
+function HoursApp({ onLogout }) {
   const { theme, toggleTheme } = useTheme();
   const [data, setData] = useState(loadData);
   const [selectedProjectId, setSelectedProjectId] = useState(data.projects[0].id);
@@ -181,7 +218,7 @@ function HoursApp() {
     };
   });
   return <div className="simple-app">
-    <header className="simple-header"><img src={theme === 'dark' ? logoWhite : logoDark} alt="Maimonet" /><button className="icon-button" onClick={toggleTheme} aria-label="Cambiar tema">{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</button></header>
+    <header className="simple-header"><img src={theme === 'dark' ? logoWhite : logoDark} alt="Maimonet" /><div className="header-actions"><button className="icon-button" onClick={toggleTheme} aria-label="Cambiar tema">{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</button><button className="icon-button" onClick={onLogout} aria-label="Cerrar sesión"><LogOut size={20} /></button></div></header>
     <main className="simple-main">
       <section className="intro"><div><p className="eyebrow">Registro de horas</p><h1>Hola, Julia</h1><p>Guarda el tiempo dedicado a cada proyecto.</p></div><div className="total-card"><Clock3 size={20} /><span>Total · {projectName(selectedProjectId)}</span><strong>{formatDuration(selectedTotal)}</strong></div></section>
       <section className={`timer-card ${data.activeTimer ? 'is-running' : ''}`}>
@@ -220,4 +257,4 @@ function WorkTaskColumns({ tasks, entries, onStatusChange, onRemove }) {
 }
 function FileInput({ label, onChange }) { const [count, setCount] = useState(0); return <label className="file-input"><span>{label}</span><div><Upload size={18} /><strong>{count ? `${count} PDF seleccionados` : 'Seleccionar archivos'}</strong><small>{count ? 'Se guardarán al pulsar el botón' : 'Solo PDF'}</small></div><input type="file" accept="application/pdf,.pdf" multiple onChange={(event) => { const files = [...event.target.files]; setCount(files.length); onChange(files); }} /></label>; }
 function DocumentList({ label, documents, onOpen }) { return <div className="document-list"><strong>{label}</strong>{documents.length ? documents.map((document) => <button key={document.id} onClick={() => onOpen(document.id)}><FileText size={15} /><span>{document.name}</span></button>) : <span className="no-documents"><FolderOpen size={14} /> Sin documentos</span>}</div>; }
-export default function App() { return <ThemeProvider><HoursApp /></ThemeProvider>; }
+export default function App() { return <ThemeProvider><LoginGate>{({ logout }) => <HoursApp onLogout={logout} />}</LoginGate></ThemeProvider>; }

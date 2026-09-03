@@ -1,7 +1,14 @@
 .simple-app { min-height: 100vh; background: var(--app-bg); }
 .simple-header { height: 110px; padding: 10px max(24px, calc((100vw - 1120px) / 2)); display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-bottom: 1px solid var(--border); }
 .simple-header img { width: auto; height: 88px; max-width: min(380px, 72vw); object-fit: contain; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
 .icon-button { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); cursor: pointer; }
+.login-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at top right, var(--accent-soft), transparent 42%), var(--app-bg); }
+.login-panel { width: min(420px, 100%); display: flex; flex-direction: column; gap: 16px; padding: 38px; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); box-shadow: 0 22px 60px var(--shadow); }
+.login-icon { width: 52px; height: 52px; display: grid; place-items: center; margin-bottom: 8px; border-radius: 15px; background: var(--accent-soft); color: var(--accent); }
+.login-panel h1 { margin-bottom: -5px; font-size: 30px; line-height: 1.1; }
+.login-copy { margin-bottom: 6px; color: var(--text-muted); }
+.login-button { width: 100%; min-height: 52px; margin-top: 4px; border: 0; border-radius: 999px; background: linear-gradient(135deg, var(--color-brand), var(--color-accent)); color: white; font-weight: 700; cursor: pointer; }
 .simple-main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 52px 0 70px; }
 .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
 .intro h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.05; letter-spacing: -.035em; margin-bottom: 9px; }
@@ -151,6 +158,7 @@ select:disabled { opacity: 1; cursor: default; }
 @media (max-width: 700px) {
   .simple-header { height: 86px; padding: 7px 14px; }
   .simple-header img { height: 68px; max-width: 75vw; }
+  .login-panel { padding: 28px 22px; }
   .simple-main { width: min(100% - 28px, 1120px); padding-top: 30px; }
   .intro { align-items: stretch; flex-direction: column; }
   .total-card { min-width: 0; }
