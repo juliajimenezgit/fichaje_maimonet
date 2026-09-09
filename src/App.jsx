@@ -3,6 +3,7 @@ import { BriefcaseBusiness, Check, ChevronRight, Clock3, Eye, EyeOff, FileText, 
 import { ThemeProvider, useTheme } from './context/ThemeContext.jsx';
 import { deletePdf, getPdf, savePdf } from './services/documentStorage.js';
 import { extractTasksFromPdf } from './services/pdfTaskExtractor.js';
+import { hasSupabaseConfig, readSharedState, saveSharedState } from './services/storageService.js';
 import logoDark from './assets/logo_grande_dark.png';
 import logoWhite from './assets/logo_grande_white.png';
 import seedData from './data/seedData.json';
@@ -28,9 +29,8 @@ function loadData() {
     if (stored?.projects?.length) {
       return { entries: stored.entries || [], activeTimer: stored.activeTimer || null, projects: stored.projects };
     }
-    // Si no hay datos en localStorage, cargar seedData
     return seedData;
-  } catch { 
+  } catch {
     return seedData;
   }
 }
@@ -91,7 +91,34 @@ function HoursApp({ onLogout }) {
   const [historyFilters, setHistoryFilters] = useState({});
   const [historySorts, setHistorySorts] = useState({});
 
-  useEffect(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(data)), [data]);
+  useEffect(() => {
+    let ignore = false;
+    const hydrate = async () => {
+      if (!hasSupabaseConfig()) {
+        return;
+      }
+
+      const remote = await readSharedState();
+      if (!ignore && remote && remote.projects?.length) {
+        setData({ entries: remote.entries || [], activeTimer: remote.activeTimer || null, projects: remote.projects });
+      }
+    };
+
+    void hydrate();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hasSupabaseConfig()) {
+      void saveSharedState({ entries: data.entries, activeTimer: data.activeTimer, projects: data.projects });
+      return;
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [data]);
+
   useEffect(() => {
     if (!data.activeTimer) return undefined;
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
