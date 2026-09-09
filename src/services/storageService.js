@@ -4,6 +4,38 @@ import { createInitialData } from '../data/initialData.js';
 export const STORAGE_KEY = 'maimonet-app-state-v1';
 export const STORAGE_TABLE = 'app_state';
 
+const stampState = (state) => {
+  if (!state || typeof state !== 'object') {
+    return { _meta: { updatedAt: Date.now() }, projects: [], entries: [], activeTimer: null };
+  }
+
+  return {
+    ...state,
+    _meta: {
+      ...state._meta,
+      updatedAt: state._meta?.updatedAt || Date.now(),
+    },
+  };
+};
+
+const getStateTimestamp = (state) => Number(state?._meta?.updatedAt || state?.updatedAt || 0);
+
+const chooseLatestState = (localState, remoteState) => {
+  if (!localState && !remoteState) {
+    return null;
+  }
+
+  if (!localState) {
+    return remoteState;
+  }
+
+  if (!remoteState) {
+    return localState;
+  }
+
+  return getStateTimestamp(localState) >= getStateTimestamp(remoteState) ? localState : remoteState;
+};
+
 export const createId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -57,34 +89,42 @@ const writeLocalStorageState = (state) => {
 
 export const readSharedState = async () => {
   const client = getSupabaseClient();
+  const localState = readLocalStorageState();
+
   if (!client) {
-    return readLocalStorageState();
+    return localState;
   }
 
   try {
     const { data, error } = await client
       .from(STORAGE_TABLE)
-      .select('state')
+      .select('state, updated_at')
       .eq('id', 'app')
       .maybeSingle();
 
     if (error) {
       console.error('Supabase read error:', error.message);
-      return readLocalStorageState();
+      return localState;
     }
 
-    return data?.state ?? readLocalStorageState();
+    if (!data?.state) {
+      return localState;
+    }
+
+    const remoteState = { ...data.state, _meta: { ...data.state._meta, updatedAt: new Date(data.updated_at || Date.now()).getTime() } };
+    return chooseLatestState(localState, remoteState);
   } catch (error) {
     console.error('Supabase unavailable:', error);
-    return readLocalStorageState();
+    return localState;
   }
 };
 
 export const saveSharedState = async (state) => {
   const client = getSupabaseClient();
+  const preparedState = stampState(state);
 
   if (typeof window !== 'undefined') {
-    writeLocalStorageState(state);
+    writeLocalStorageState(preparedState);
   }
 
   if (!client) {
@@ -95,8 +135,8 @@ export const saveSharedState = async (state) => {
     const { error } = await client.from(STORAGE_TABLE).upsert(
       {
         id: 'app',
-        state,
-        updated_at: new Date().toISOString(),
+        state: preparedState,
+        updated_at: new Date(preparedState._meta.updatedAt).toISOString(),
       },
       { onConflict: 'id' }
     );
@@ -112,8 +152,9 @@ export const saveSharedState = async (state) => {
 export const readStorageState = () => readLocalStorageState();
 
 export const writeStorageState = (state) => {
-  writeLocalStorageState(state);
-  void saveSharedState(state);
+  const preparedState = stampState(state);
+  writeLocalStorageState(preparedState);
+  void saveSharedState(preparedState);
 };
 
 export const initializeStorage = () => {
