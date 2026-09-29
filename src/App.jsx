@@ -3,18 +3,12 @@ import { BriefcaseBusiness, Check, ChevronRight, Clock3, Eye, EyeOff, FileText, 
 import { ThemeProvider, useTheme } from './context/ThemeContext.jsx';
 import { deletePdf, getPdf, savePdf } from './services/documentStorage.js';
 import { extractTasksFromPdf } from './services/pdfTaskExtractor.js';
-import { hasSupabaseConfig, readSharedState, saveSharedState } from './services/storageService.js';
+import { useSharedState } from './hooks/useSharedState.js';
 import logoDark from './assets/logo_grande_dark.png';
 import logoWhite from './assets/logo_grande_white.png';
-import seedData from './data/seedData.json';
 import './App.css';
 
-const STORAGE_KEY = 'maimonet-simple-hours-v2';
 const AUTH_SESSION_KEY = 'maimonet-authenticated';
-const INITIAL_PROJECTS = [
-  { id: 'qth-sutan', name: 'QTH Sutan', actas: [], budgets: [], workTasks: [] },
-  { id: 'maimonet', name: 'Maimonet', actas: [], budgets: [], workTasks: [] },
-];
 const pad = (value) => String(value).padStart(2, '0');
 const dateValue = (date = new Date()) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 const timeValue = (date = new Date()) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -22,18 +16,6 @@ const formatClock = (timestamp) => new Intl.DateTimeFormat('es-ES', { hour: '2-d
 const formatDate = (value) => new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${value}T12:00:00`));
 const formatDuration = (milliseconds) => { const minutes = Math.max(0, Math.round(milliseconds / 60000)); return minutes >= 60 ? `${Math.floor(minutes / 60)} h ${pad(minutes % 60)} min` : `${minutes} min`; };
 const formatLive = (milliseconds) => { const seconds = Math.max(0, Math.floor(milliseconds / 1000)); return `${pad(Math.floor(seconds / 3600))}:${pad(Math.floor((seconds % 3600) / 60))}:${pad(seconds % 60)}`; };
-
-function loadData() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(localStorage.getItem('maimonet-simple-hours-v1'));
-    if (stored?.projects?.length) {
-      return { entries: stored.entries || [], activeTimer: stored.activeTimer || null, projects: stored.projects };
-    }
-    return seedData;
-  } catch {
-    return seedData;
-  }
-}
 
 function LoginGate({ children }) {
   const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem(AUTH_SESSION_KEY) === 'true');
@@ -72,16 +54,25 @@ function LoginGate({ children }) {
   return <main className="login-screen"><form className="login-panel" onSubmit={submit}><div className="login-icon"><LockKeyhole size={24} /></div><p className="eyebrow">Área privada</p><h1>Accede a tu fichaje</h1><p className="login-copy">Introduce tus datos para continuar.</p><label><span>Usuario</span><input autoFocus value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" /></label><label><span>Contraseña</span><div className="password-field"><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /><button type="button" className="password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>{message && <p className="form-message">{message}</p>}<button className="login-button" type="submit">Entrar</button></form></main>;
 }
 
-function HoursApp({ onLogout }) {
+function SharedHoursApp({ onLogout }) {
+  const shared = useSharedState();
+  if (!shared.data) return <main className="login-screen"><section className="login-panel">
+    <h1>{shared.status === 'load-error' ? 'No se han podido cargar tus fichajes' : 'Cargando tus fichajes…'}</h1>
+    {shared.status === 'load-error' ? <><p role="alert">{shared.error}</p><button className="login-button" onClick={shared.retryLoad}>Reintentar</button></> : <p role="status">Conectando con Supabase.</p>}
+  </section></main>;
+  return <HoursApp onLogout={onLogout} shared={shared} />;
+}
+
+function HoursApp({ onLogout, shared }) {
   const { theme, toggleTheme } = useTheme();
-  const [data, setData] = useState(loadData);
-  const [selectedProjectId, setSelectedProjectId] = useState(data.projects[0].id);
+  const { data, setData, status: saveStatus, error: saveError, retrySave } = shared;
+  const [selectedProjectId, setSelectedProjectId] = useState(data.projects[0]?.id || '');
   const [task, setTask] = useState('');
   const [taskSubtasks, setTaskSubtasks] = useState([]);
   const [modal, setModal] = useState(null);
   const [message, setMessage] = useState('');
   const [now, setNow] = useState(() => data.activeTimer?.startedAt || 0);
-  const [manual, setManual] = useState({ date: dateValue(), startTime: '', endTime: '', task: '', subtasks: [], projectId: data.projects[0].id });
+  const [manual, setManual] = useState({ date: dateValue(), startTime: '', endTime: '', task: '', subtasks: [], projectId: data.projects[0]?.id || '' });
   const [newProject, setNewProject] = useState({ name: '', actas: [], budgets: [] });
   const [editingEntryId, setEditingEntryId] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
@@ -90,34 +81,6 @@ function HoursApp({ onLogout }) {
   const [newWorkSubtasks, setNewWorkSubtasks] = useState([]);
   const [historyFilters, setHistoryFilters] = useState({});
   const [historySorts, setHistorySorts] = useState({});
-
-  useEffect(() => {
-    let ignore = false;
-    const hydrate = async () => {
-      if (!hasSupabaseConfig()) {
-        return;
-      }
-
-      const remote = await readSharedState();
-      if (!ignore && remote && remote.projects?.length) {
-        setData({ entries: remote.entries || [], activeTimer: remote.activeTimer || null, projects: remote.projects });
-      }
-    };
-
-    void hydrate();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (hasSupabaseConfig()) {
-      void saveSharedState({ entries: data.entries, activeTimer: data.activeTimer, projects: data.projects });
-      return;
-    }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
 
   useEffect(() => {
     if (!data.activeTimer) return undefined;
@@ -129,6 +92,7 @@ function HoursApp({ onLogout }) {
   const selectedTotal = useMemo(() => data.entries.filter((entry) => entry.projectId === selectedProjectId || entry.clientId === selectedProjectId).reduce((total, entry) => total + entry.durationMs, 0), [data.entries, selectedProjectId]);
 
   const start = () => {
+    if (!selectedProjectId) return setMessage('Crea un proyecto antes de iniciar el fichaje.');
     if (!task.trim()) return setMessage('Escribe primero qué tarea vas a realizar.');
     const startedAt = Date.now();
     setData((current) => ({ ...current, activeTimer: { startedAt, task: task.trim(), subtasks: taskSubtasks.map((item) => item.trim()).filter(Boolean), projectId: selectedProjectId } }));
@@ -149,6 +113,7 @@ function HoursApp({ onLogout }) {
     event.preventDefault();
     const startDate = new Date(`${manual.date}T${manual.startTime}:00`);
     const endDate = new Date(`${manual.date}T${manual.endTime}:00`);
+    if (!manual.projectId) return setMessage('Selecciona un proyecto.');
     if (!manual.task.trim() || !manual.startTime || !manual.endTime || endDate <= startDate) return setMessage('Completa la tarea y usa una hora de fin posterior a la de inicio.');
     const linkedTask = (data.projects.find((project) => project.id === manual.projectId)?.workTasks || []).find((item) => item.title.trim().toLowerCase() === manual.task.trim().toLowerCase());
     const previousEntry = editingEntryId ? data.entries.find((item) => item.id === editingEntryId) : null;
@@ -248,6 +213,9 @@ function HoursApp({ onLogout }) {
   return <div className="simple-app">
     <header className="simple-header"><img src={theme === 'dark' ? logoWhite : logoDark} alt="Maimonet" /><div className="header-actions"><button className="icon-button" onClick={toggleTheme} aria-label="Cambiar tema">{theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}</button><button className="icon-button" onClick={onLogout} aria-label="Cerrar sesión"><LogOut size={20} /></button></div></header>
     <main className="simple-main">
+      <div className="sync-status" role={saveStatus === 'save-error' ? 'alert' : 'status'}>
+        {saveStatus === 'save-error' ? <><span>{saveError}</span><button className="manual-button" onClick={retrySave}>Reintentar guardado</button></> : saveStatus === 'saving' ? 'Guardando cambios…' : 'Cambios guardados'}
+      </div>
       <section className="intro"><div><p className="eyebrow">Registro de horas</p><h1>Hola, Julia</h1><p>Guarda el tiempo dedicado a cada proyecto.</p></div><div className="total-card"><Clock3 size={20} /><span>Total · {projectName(selectedProjectId)}</span><strong>{formatDuration(selectedTotal)}</strong></div></section>
       <section className={`timer-card ${data.activeTimer ? 'is-running' : ''}`}>
         {data.activeTimer ? <><span className="live-label"><i /> Trabajando ahora</span><strong className="live-time">{formatLive(now - data.activeTimer.startedAt)}</strong><h2>{data.activeTimer.task}</h2><SubtaskList subtasks={data.activeTimer.subtasks} /><p>{projectName(data.activeTimer.projectId || data.activeTimer.clientId)} · Inicio a las {formatClock(data.activeTimer.startedAt)}</p><button className="finish-button" onClick={finish}>FIN</button></> : <><div className="field-row"><label><span>Proyecto / cliente</span><select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>{projectOptions}</select></label><label><span>¿Qué vas a hacer?</span><input value={task} onChange={(event) => setTask(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && start()} placeholder="Ej. Generador funcional" /></label></div><SubtaskFields subtasks={taskSubtasks} onChange={setTaskSubtasks} />{message && !modal && <p className="form-message">{message}</p>}<button className="start-button" onClick={start}>INICIO</button><p className="start-help">Se guardará la hora actual automáticamente · {formatDuration(selectedTotal)} en este proyecto</p></>}
@@ -285,4 +253,6 @@ function WorkTaskColumns({ tasks, entries, onStatusChange, onRemove }) {
 }
 function FileInput({ label, onChange }) { const [count, setCount] = useState(0); return <label className="file-input"><span>{label}</span><div><Upload size={18} /><strong>{count ? `${count} PDF seleccionados` : 'Seleccionar archivos'}</strong><small>{count ? 'Se guardarán al pulsar el botón' : 'Solo PDF'}</small></div><input type="file" accept="application/pdf,.pdf" multiple onChange={(event) => { const files = [...event.target.files]; setCount(files.length); onChange(files); }} /></label>; }
 function DocumentList({ label, documents, onOpen }) { return <div className="document-list"><strong>{label}</strong>{documents.length ? documents.map((document) => <button key={document.id} onClick={() => onOpen(document.id)}><FileText size={15} /><span>{document.name}</span></button>) : <span className="no-documents"><FolderOpen size={14} /> Sin documentos</span>}</div>; }
-export default function App() { return <ThemeProvider><LoginGate>{({ logout }) => <HoursApp onLogout={logout} />}</LoginGate></ThemeProvider>; }
+export default function App() {
+  return <ThemeProvider><LoginGate>{({ logout }) => <SharedHoursApp onLogout={logout} />}</LoginGate></ThemeProvider>;
+}

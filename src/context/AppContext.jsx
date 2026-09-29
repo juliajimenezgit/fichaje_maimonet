@@ -1,11 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { initializeStorage, readStorageState, resetStorage, writeStorageState } from '../services/storageService.js';
+import { createContext, useContext, useMemo, useState } from 'react';
+import { useSharedState } from '../hooks/useSharedState.js';
 import { buildProjectPayload, buildProjectPayments, validateProject } from '../services/projectService.js';
 import { buildSettingsPayload, validateSettings } from '../services/settingsService.js';
 import { buildTimeEntryPayload, validateTimeEntry } from '../services/timeEntryService.js';
 import { calculateElapsedMinutes } from '../utils/calculations.js';
-import { createInitialData } from '../data/initialData.js';
-import { createId } from '../services/storageService.js';
 
 const defaultContextValue = {
   state: {
@@ -43,91 +41,11 @@ const defaultContextValue = {
 const AppContext = createContext(defaultContextValue);
 
 export const AppProvider = ({ children }) => {
-  const [state, setState] = useState(() => initializeStorage());
+  const shared = useSharedState();
+  const state = useMemo(() => ({ ...defaultContextValue.state, ...shared.data }), [shared.data]);
   const [errors, setErrors] = useState([]);
-  const [activeTimer, setActiveTimer] = useState(null);
-
-  useEffect(() => {
-    const stored = readStorageState();
-    if (stored) {
-      setState(stored);
-      setActiveTimer(stored.activeTimer || null);
-    }
-    // After loading existing state, merge Dubita tasks from initial data if missing
-    try {
-      const initial = createInitialData();
-      const storedState = stored || {};
-      const storedTasks = (storedState.tasks || []).map((t) => t.id);
-      const dubitaTasks = (initial.tasks || []).filter((t) => t.projectId === 'proj-dubita');
-      const missing = dubitaTasks.filter((t) => !storedTasks.includes(t.id));
-      if (missing.length) {
-        const next = {
-          ...storedState,
-          tasks: [...(storedState.tasks || []), ...missing],
-        };
-        writeStorageState(next);
-        // also set local React state so running app sees them immediately
-        setState(next);
-      }
-      // Add example time entries for Dubita tasks if they don't exist
-      const storedEntryIds = (storedState.timeEntries || []).map((e) => e.taskId + '::' + e.projectId + '::' + (e.durationMinutes || 0));
-      const dubitaDurations = {
-        'task-dubita-2': 120, // 2 h
-        'task-dubita-3': 30,  // 0.5 h
-        'task-dubita-4': 120, // 2 h
-        'task-dubita-5': 120, // 2 h
-        'task-dubita-6': 120, // 2 h
-        'task-dubita-7': 60,  // 1 h
-      };
-
-      const entriesToAdd = [];
-      const today = new Date().toISOString().slice(0, 10);
-      const nowIso = new Date().toISOString();
-
-      dubitaTasks.forEach((task) => {
-        const dur = dubitaDurations[task.id];
-        if (!dur) return;
-        const key = task.id + '::' + 'proj-dubita' + '::' + dur;
-        // simple heuristic to avoid duplicates: check if any entry exists for taskId
-        const exists = (storedState.timeEntries || []).some((e) => e.taskId === task.id && e.projectId === 'proj-dubita');
-        if (!exists) {
-          entriesToAdd.push({
-            id: createId(),
-            projectId: 'proj-dubita',
-            taskId: task.id,
-            date: today,
-            startTime: '',
-            endTime: '',
-            durationMinutes: dur,
-            description: `Registro inicial: ${task.name}`,
-            source: 'import',
-            createdAt: nowIso,
-            updatedAt: nowIso,
-          });
-        }
-      });
-
-      if (entriesToAdd.length) {
-        const nextEntriesState = {
-          ...readStorageState(),
-          timeEntries: [...(storedState.timeEntries || []), ...entriesToAdd],
-        };
-        writeStorageState(nextEntriesState);
-        setState((s) => ({ ...s, timeEntries: [...(s.timeEntries || []), ...entriesToAdd] }));
-      }
-    } catch (e) {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    writeStorageState(state);
-  }, [state]);
-
-  const saveState = (nextState) => {
-    setState(nextState);
-    writeStorageState(nextState);
-  };
+  const activeTimer = state.activeTimer;
+  const saveState = shared.setData;
 
   const updateSettings = (settingsData) => {
     const payload = buildSettingsPayload(settingsData);
@@ -293,7 +211,6 @@ export const AppProvider = ({ children }) => {
       activeTimer: timerData,
     };
     saveState(nextState);
-    setActiveTimer(timerData);
     return { success: true };
   };
 
@@ -303,7 +220,6 @@ export const AppProvider = ({ children }) => {
       activeTimer: null,
     };
     saveState(nextState);
-    setActiveTimer(null);
     return { success: true };
   };
 
@@ -380,7 +296,6 @@ export const AppProvider = ({ children }) => {
       activeTimer: null,
     };
     saveState(nextState);
-    setActiveTimer(null);
     return { success: true, entry: payload };
   };
 
@@ -405,7 +320,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const resetAll = () => {
-    const nextState = resetStorage();
+    const nextState = { ...state, projects: [], tasks: [], entries: [], timeEntries: [], payments: [], activeTimer: null };
     saveState(nextState);
     setErrors([]);
     return { success: true, state: nextState };
@@ -437,7 +352,8 @@ export const AppProvider = ({ children }) => {
     resetAll,
   }), [state, errors, activeTimer]);
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  if (!shared.data) return <div role="status"><p>{shared.error || 'Cargando datos de Supabase…'}</p>{shared.error && <button onClick={shared.retryLoad}>Reintentar</button>}</div>;
+  return <AppContext.Provider value={value}>{shared.status === 'save-error' && <div role="alert">{shared.error}<button onClick={shared.retrySave}>Reintentar guardado</button></div>}{children}</AppContext.Provider>;
 };
 
 export const useAppContext = () => useContext(AppContext) || defaultContextValue;

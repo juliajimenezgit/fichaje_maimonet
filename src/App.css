@@ -190,3 +190,5 @@ select:disabled { opacity: 1; cursor: default; }
   .project-record .record-date { grid-column: 1 / -1; }
   .subtask-heading { align-items: flex-start; }
 }
+.sync-status { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 16px; color: var(--muted); font-size: 14px; }
+.sync-status[role="alert"] { justify-content: space-between; color: var(--text); }

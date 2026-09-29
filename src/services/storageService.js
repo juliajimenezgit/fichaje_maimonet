@@ -1,175 +1,48 @@
 import { createClient } from '@supabase/supabase-js';
-import { createInitialData } from '../data/initialData.js';
 
-export const STORAGE_KEY = 'maimonet-app-state-v1';
 export const STORAGE_TABLE = 'app_state';
-
-const stampState = (state) => {
-  if (!state || typeof state !== 'object') {
-    return { _meta: { updatedAt: Date.now() }, projects: [], entries: [], activeTimer: null };
-  }
-
-  return {
-    ...state,
-    _meta: {
-      ...state._meta,
-      updatedAt: state._meta?.updatedAt || Date.now(),
-    },
-  };
-};
-
-const getStateTimestamp = (state) => Number(state?._meta?.updatedAt || state?.updatedAt || 0);
-
-const chooseLatestState = (localState, remoteState) => {
-  if (!localState && !remoteState) {
-    return null;
-  }
-
-  if (!localState) {
-    return remoteState;
-  }
-
-  if (!remoteState) {
-    return localState;
-  }
-
-  return getStateTimestamp(localState) >= getStateTimestamp(remoteState) ? localState : remoteState;
-};
+const LEGACY_STORAGE_KEYS = ['maimonet-app-state-v1', 'maimonet-simple-hours-v1', 'maimonet-simple-hours-v2'];
+let supabaseClient;
 
 export const createId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return `id-${Math.random().toString(36).slice(2)}-${Date.now()}`;
 };
 
-export const hasSupabaseConfig = () => {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return Boolean(url && anonKey);
-};
+const getPublicKey = () => import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY;
+export const hasSupabaseConfig = () => Boolean(import.meta.env?.VITE_SUPABASE_URL && getPublicKey());
 
 const getSupabaseClient = () => {
   if (!hasSupabaseConfig()) {
-    return null;
+    throw new Error('Falta configurar la conexión con Supabase.');
   }
-
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  return createClient(url, anonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
+  supabaseClient ??= createClient(import.meta.env.VITE_SUPABASE_URL, getPublicKey(), {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
+  return supabaseClient;
 };
 
-const readLocalStorageState = () => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
+export const removeLegacyLocalState = () => {
+  if (typeof window === 'undefined') return;
+  for (const key of LEGACY_STORAGE_KEYS) window.localStorage.removeItem(key);
 };
 
-const writeLocalStorageState = (state) => {
-  if (typeof window === 'undefined') {
-    return;
+export const readSharedState = async (client = getSupabaseClient()) => {
+  const { data, error } = await client.from(STORAGE_TABLE).select('state, updated_at').eq('id', 'app').maybeSingle();
+  if (error) throw new Error('No se han podido cargar los datos de Supabase. Comprueba la conexión y vuelve a intentarlo.', { cause: error });
+  if (!data) return { projects: [], entries: [], activeTimer: null };
+  if (!Array.isArray(data.state?.projects) || !Array.isArray(data.state?.entries)) {
+    throw new Error('Los datos de Supabase no tienen el formato esperado.');
   }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  return { ...data.state, activeTimer: data.state.activeTimer || null };
 };
 
-export const readSharedState = async () => {
-  const client = getSupabaseClient();
-  const localState = readLocalStorageState();
-
-  if (!client) {
-    return localState;
-  }
-
-  try {
-    const { data, error } = await client
-      .from(STORAGE_TABLE)
-      .select('state, updated_at')
-      .eq('id', 'app')
-      .maybeSingle();
-
-    if (error) {
-      console.error('Supabase read error:', error.message);
-      return localState;
-    }
-
-    if (!data?.state) {
-      return localState;
-    }
-
-    const remoteState = { ...data.state, _meta: { ...data.state._meta, updatedAt: new Date(data.updated_at || Date.now()).getTime() } };
-    return chooseLatestState(localState, remoteState);
-  } catch (error) {
-    console.error('Supabase unavailable:', error);
-    return localState;
-  }
-};
-
-export const saveSharedState = async (state) => {
-  const client = getSupabaseClient();
-  const preparedState = stampState(state);
-
-  if (typeof window !== 'undefined') {
-    writeLocalStorageState(preparedState);
-  }
-
-  if (!client) {
-    return;
-  }
-
-  try {
-    const { error } = await client.from(STORAGE_TABLE).upsert(
-      {
-        id: 'app',
-        state: preparedState,
-        updated_at: new Date(preparedState._meta.updatedAt).toISOString(),
-      },
-      { onConflict: 'id' }
-    );
-
-    if (error) {
-      console.error('Supabase write error:', error.message);
-    }
-  } catch (error) {
-    console.error('Supabase sync failed:', error);
-  }
-};
-
-export const readStorageState = () => readLocalStorageState();
-
-export const writeStorageState = (state) => {
-  const preparedState = stampState(state);
-  writeLocalStorageState(preparedState);
-  void saveSharedState(preparedState);
-};
-
-export const initializeStorage = () => {
-  const stored = readLocalStorageState();
-  if (stored) {
-    return stored;
-  }
-
-  const initialState = createInitialData();
-  writeStorageState(initialState);
-  return initialState;
-};
-
-export const resetStorage = () => {
-  const initialState = createInitialData();
-  writeStorageState(initialState);
-  return initialState;
+export const saveSharedState = async (state, client = getSupabaseClient()) => {
+  const updatedAt = Date.now();
+  const { error } = await client.from(STORAGE_TABLE).upsert({
+    id: 'app',
+    state: { ...state, _meta: { ...state._meta, updatedAt } },
+    updated_at: new Date(updatedAt).toISOString(),
+  }, { onConflict: 'id' });
+  if (error) throw new Error('No se han guardado los cambios en Supabase. Mantén esta página abierta y reintenta el guardado.', { cause: error });
 };
